@@ -7,7 +7,7 @@ def f1_micro(y_true, y_pred) -> float:
     for i in range(len(y_true)):
         if y_true[i] == y_pred[i]:
             tp+=1
-        if y_true[i] != y_pred[i]:
+        else:
             fp +=1
     fn = len(y_true) - tp
     return (2*tp)/((2*tp)+fp+fn)
