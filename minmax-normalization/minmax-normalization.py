@@ -13,6 +13,3 @@ def minmax_scale(X, axis=0, eps=1e-12):
     deno = np.where(diff == 0, diff+eps,diff)
     
     return (X - X_min)/deno
-if __name__ == '__main__':
-    X = [[1,2],[3,6],[5,10]]
-    print(minmax_scale(X))
