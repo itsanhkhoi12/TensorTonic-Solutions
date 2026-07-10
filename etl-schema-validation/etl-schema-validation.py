@@ -1,48 +1,46 @@
 def validate_records(records, schema):
-    """
-    Validate records against a schema definition.
-    """
-    # Write code here
-    res = []
+    NUMERIC_TYPES = {"int", "float"}
+    results = []
+
     for idx, record in enumerate(records):
         errors = []
-        is_valid = False
-        # Looping over schema
-        for valid in schema:
-            
-            # Check missing columns
-            if valid['column'] not in record:
-                errors.append(f'{valid['column']}: missing')
+
+        for rule in schema:
+            column = rule["column"]
+            expected_type = rule["type"]
+            nullable = rule["nullable"]
+
+            if column not in record:
+                errors.append(f"{column}: missing")
                 continue
 
-            # Check nullable values
-            if not valid['nullable'] and record[valid['column']] is None:
-                errors.append(f'{valid['column']}: null')
+            value = record[column]
+
+            if value is None:
+                if not nullable:
+                    errors.append(f"{column}: null")
                 continue
 
-            if valid['nullable'] and record[valid['column']] is None:
-                continue
+            actual_type = type(value).__name__
 
-            # Check typing            
-            if valid['type'] != type(record[valid['column']]).__name__:
-                if valid['type'] in {'float','int'} and type(record[valid['column']]).__name__ in {'float','int'}:
-                    pass
-                    
-                else:
-                    errors.append(f'{valid['column']}: expected {valid['type']}, got {type(record[valid['column']]).__name__}')
+            if expected_type != actual_type:
+                if not (
+                    expected_type in NUMERIC_TYPES
+                    and actual_type in NUMERIC_TYPES
+                ):
+                    errors.append(
+                        f"{column}: expected {expected_type}, got {actual_type}"
+                    )
                     continue
 
-            # Range checking
-            if valid['type'] in {'float','int'} and type(record[valid['column']]).__name__ in {'float','int'}:
-                if 'min' in valid and 'max' in valid:
-                    if record[valid['column']] < valid['min'] or record[valid['column']] > valid['max']:
-                        errors.append(f'{valid['column']}: out of range')
-                        continue
+            if expected_type in NUMERIC_TYPES:
+                if "min" in rule and value < rule["min"]:
+                    errors.append(f"{column}: out of range")
+                    continue
 
-                 
-        if len(errors) == 0:
-            is_valid = True
-        res.append((idx,is_valid,errors))
+                if "max" in rule and value > rule["max"]:
+                    errors.append(f"{column}: out of range")
 
-    return res
-        
+        results.append((idx, not errors, errors))
+
+    return results
